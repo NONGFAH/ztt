@@ -1,10 +1,10 @@
-# ztResolve 🪐
+# ztt (ZeroTier Tools) 🪐
 
 中文 | [English](./README_EN.md)
 
 ---
 
-**ztResolve** 是一款专为 **ZeroTier Planet** 设计的高级、高性能网页版离线网络拓扑配置生成、定制、签署及逆向解析工具箱。
+**ztt** (ZeroTier Tools) 是一款专为 **ZeroTier Planet** 设计的高级、高性能网页版离线网络拓扑配置生成、定制、签署及逆向解析工具箱。
 
 该工具完全基于在浏览器 WebAssembly (WASM) 沙箱中运行的 Go 编译内核，免去了传统复杂的命令行构建环境搭建、Go/Rust 编译器安装等繁琐过程，提供 100% 离线、极速且安全的安全签署体验。
 
@@ -48,7 +48,7 @@
 ### 📁 项目结构
 
 ```text
-ztResolve/
+ztt/
 ├── public/
 │   ├── favicon.svg        # 站点图标
 │   ├── qq.jpeg            # QQ 交流群二维码

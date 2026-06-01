@@ -1,10 +1,10 @@
-# ztResolve 🪐
+# ztt (ZeroTier Tools) 🪐
 
 [中文](./README.md) | English
 
 ---
 
-**ztResolve** is a premium, high-performance web-based guided custom tool suite for offline **ZeroTier Planet** network topology configuration generation, customization, signing, and parsing.
+**ztt** (ZeroTier Tools) is a premium, high-performance web-based guided custom tool suite for offline **ZeroTier Planet** network topology configuration generation, customization, signing, and parsing.
 
 Driven by a compiled Go compilation engine running entirely inside the browser's WebAssembly (WASM) sandbox, this tool eliminates the need for complex command-line builds, Go/Rust compiler installations, and security concerns. Everything is executed 100% locally and offline.
 
@@ -48,7 +48,7 @@ Ensure you have [Node.js](https://nodejs.org/) installed.
 ### 📁 Project Structure
 
 ```text
-ztResolve/
+ztt/
 ├── public/
 │   ├── favicon.svg        # App Favicon
 │   ├── qq.jpeg            # QQ Group QR Code
