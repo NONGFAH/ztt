@@ -1,0 +1,502 @@
+<!doctype html>
+<html lang="zh-CN" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Planet 解析工具</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- Google Fonts for premium typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  </head>
+  <body class="bg-[#0b0f19] text-gray-100 min-h-screen font-sans selection:bg-blue-500/30 selection:text-blue-200 antialiased overflow-x-hidden">
+    <!-- Background glowing orbs for premium visual depth -->
+    <div class="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl -z-10 pointer-events-none animate-pulse duration-[6s]"></div>
+    <div class="absolute bottom-10 right-1/4 w-[450px] h-[450px] bg-purple-500/10 rounded-full blur-3xl -z-10 pointer-events-none animate-pulse duration-[8s]"></div>
+
+    <div class="max-w-5xl mx-auto px-4 py-8 md:py-12 min-h-screen flex flex-col" id="app">
+      <!-- Header -->
+      <header class="flex flex-col md:flex-row md:items-center md:justify-between border-b border-gray-800/80 pb-6 mb-8 gap-4">
+        <div>
+          <div class="flex items-center gap-3">
+            <span class="px-2.5 py-1 text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-md tracking-wider uppercase">WASM Client</span>
+            <span id="wasm-status" class="px-2.5 py-1 text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20 rounded-md tracking-wider uppercase transition-all duration-300">引擎加载中...</span>
+          </div>
+          <p class="text-gray-400 text-sm mt-1">引导式离线 Planet 网络拓扑配置生成与定制工具箱</p>
+        </div>
+        <div class="flex md:flex-col items-center md:items-end justify-between md:justify-start w-full md:w-auto gap-4">
+          <div class="hidden md:block text-right">
+            <p class="text-xs text-gray-500">Go SDK Target</p>
+            <p class="text-xs text-gray-400 font-mono">wasm32 / go1.26.3</p>
+          </div>
+          <button type="button" id="trigger-support-modal" class="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-gray-300 hover:text-white bg-gray-900/60 hover:bg-gray-800/80 border border-gray-800 hover:border-blue-500/30 rounded-lg shadow-lg hover:shadow-blue-500/5 transition-all cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+            </svg>
+            交流群与赞赏
+          </button>
+        </div>
+      </header>
+
+      <!-- Step Progress Bar -->
+      <nav class="mb-12 bg-gray-900/40 border border-gray-800/80 backdrop-blur-md rounded-2xl p-4 md:p-6 shadow-xl">
+        <div class="flex items-center justify-between relative max-w-3xl mx-auto">
+          <!-- Connector line -->
+          <div class="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-[2px] bg-gray-800 -z-10">
+            <div id="step-progress-line" class="h-full bg-gradient-to-r from-blue-500 to-indigo-500 w-0 transition-all duration-300"></div>
+          </div>
+
+          <!-- Step 1 -->
+          <div class="flex flex-col items-center gap-2 group cursor-pointer" id="nav-step-1">
+            <div class="step-icon w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-blue-500 text-white border-2 border-blue-400/30 transition-all duration-300">1</div>
+            <span class="text-xs font-semibold text-blue-400 font-sans tracking-wide">1. 身份私钥</span>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="flex flex-col items-center gap-2 group" id="nav-step-2">
+            <div class="step-icon w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-gray-900 text-gray-500 border-2 border-gray-800 transition-all duration-300">2</div>
+            <span class="text-xs font-semibold text-gray-500 font-sans tracking-wide">2. 模板导入</span>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="flex flex-col items-center gap-2 group" id="nav-step-3">
+            <div class="step-icon w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-gray-900 text-gray-500 border-2 border-gray-800 transition-all duration-300">3</div>
+            <span class="text-xs font-semibold text-gray-500 font-sans tracking-wide">3. 拓扑编辑</span>
+          </div>
+
+          <!-- Step 4 -->
+          <div class="flex flex-col items-center gap-2 group" id="nav-step-4">
+            <div class="step-icon w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-gray-900 text-gray-500 border-2 border-gray-800 transition-all duration-300">4</div>
+            <span class="text-xs font-semibold text-gray-500 font-sans tracking-wide">4. 编译生成</span>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Wizard Panels Containers -->
+      <main class="min-h-[400px] mb-8">
+
+        <!-- ==================== STEP 1: PRIVATE KEY ==================== -->
+        <section id="panel-step-1" class="panel-section transition-all duration-300 animate-fadeIn">
+          <div class="bg-gray-900/60 border border-gray-800/80 backdrop-blur-md rounded-2xl p-6 md:p-8 shadow-xl">
+            <div class="mb-6">
+              <h2 class="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                <span class="px-2 py-0.5 text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded">第 1 步</span>
+                载入或生成身份私钥 (Identity Secret)
+              </h2>
+              <p class="text-sm text-gray-400 mt-1">每一个 Planet 文件都必须由一个 Curve25519 节点私钥进行签名签署以维护其拓扑主权的合法性。</p>
+            </div>
+
+            <!-- Key Status Indicator -->
+            <div id="key-status-box" class="bg-blue-500/5 border border-blue-500/20 rounded-xl p-4 mb-8 flex items-center justify-between gap-4">
+              <div class="flex items-center gap-3">
+                <div class="p-2 bg-blue-500/10 text-blue-400 rounded-lg" id="key-icon-box">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" /></svg>
+                </div>
+                <div>
+                  <h4 class="text-sm font-semibold text-white" id="key-status-title">检查存储中...</h4>
+                  <p class="text-xs text-gray-400 mt-0.5" id="key-status-desc">系统正在读取本地 LocalStorage 数据。</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <button type="button" id="download-stored-key-btn" class="hidden text-xs text-blue-400 hover:text-blue-300 font-medium py-1 px-2 hover:bg-blue-500/10 border border-blue-500/20 rounded transition-all">下载此密钥</button>
+                <button type="button" id="delete-stored-key-btn" class="hidden text-xs text-red-400 hover:text-red-300 font-medium py-1 px-2 hover:bg-red-500/10 border border-red-500/20 rounded transition-all">删除此密钥</button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <!-- Upload Secret Key File -->
+              <div id="key-upload-zone" class="border-2 border-dashed border-gray-800 hover:border-blue-500/50 bg-[#070b12] rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-200 group">
+                <input type="file" id="key-file-input" class="hidden" accept="*" />
+                <div class="p-3.5 bg-blue-500/5 group-hover:bg-blue-500/10 text-blue-400 rounded-full border border-blue-500/10 group-hover:border-blue-500/20 mb-3 transition-all duration-200">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                </div>
+                <h4 class="text-sm font-semibold text-gray-300 group-hover:text-blue-400 transition-all duration-150">上传已有密钥文件</h4>
+                <p class="text-xs text-gray-500 mt-1 max-w-[220px] mx-auto">支持拖入您的 <code>identity.secret</code> 文件直接将其灌入本地存储。</p>
+              </div>
+
+              <!-- Setup Generation Mode Selection -->
+              <div class="bg-[#070b12] border border-gray-800 hover:border-gray-700 rounded-xl p-6 flex flex-col justify-between transition-all duration-200">
+                <div>
+                  <h4 class="text-sm font-semibold text-white flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                    使用自动生成的全新私钥
+                  </h4>
+                  <p class="text-xs text-gray-400 mt-2 leading-relaxed">如果您没有现成的私钥，可以跳过密钥上传。在第 4 步编译时，WASM 引擎将全新生成一个高度安全的 Curve25519 秘钥，自动灌入本地并为您触发文件下载备份。</p>
+                </div>
+                <button type="button" id="trigger-gen-key-btn" class="mt-4 text-xs font-semibold bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 py-2.5 px-4 rounded-lg flex items-center justify-center gap-1.5 transition-all">
+                  生成全新随机私钥
+                </button>
+              </div>
+            </div>
+
+            <!-- Panel Actions -->
+            <div class="flex justify-end pt-4 border-t border-gray-850">
+              <button type="button" id="btn-next-1" class="btn bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 px-6 rounded-lg text-sm transition-all duration-200 flex items-center gap-1">
+                下一步：模板导入
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== STEP 2: CHOOSE GENERATION METHOD ==================== -->
+        <section id="panel-step-2" class="panel-section hidden transition-all duration-300 animate-fadeIn">
+          <div class="bg-gray-900/60 border border-gray-800/80 backdrop-blur-md rounded-2xl p-6 md:p-8 shadow-xl">
+            <div class="mb-6">
+              <h2 class="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                <span class="px-2 py-0.5 text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded">第 2 步</span>
+                选择 Planet 模板生成方式
+              </h2>
+              <p class="text-sm text-gray-400 mt-1">您可以选择从空模板手动构建节点，或者直接导入一份已编译好的二进制 Planet 提取参数进行快捷编辑。</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+              <!-- Method A: From Scratch -->
+              <div id="method-scratch" class="bg-[#070b12] border-2 border-gray-800 hover:border-blue-500/50 rounded-2xl p-6 flex flex-col justify-between cursor-pointer transition-all duration-200 group">
+                <div>
+                  <div class="w-12 h-12 bg-blue-500/10 text-blue-400 rounded-xl flex items-center justify-center border border-blue-500/20 mb-4 group-hover:scale-105 transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+                  </div>
+                  <h3 class="text-lg font-bold text-white group-hover:text-blue-400 transition-all duration-150">从零全新创建</h3>
+                  <p class="text-xs text-gray-400 mt-2 leading-relaxed">系统将为您生成标准的 Planet JSON 模板。您可以从头录入您的 World ID、添加您的 Roots 根服务器和绑定相应的公网 IP 路由节点。</p>
+                </div>
+                <div class="mt-6 flex items-center gap-1.5 text-xs text-blue-400 font-semibold group-hover:translate-x-1 transition-all">
+                  选择此方案开始构建
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                </div>
+              </div>
+
+              <!-- Method B: Upload Existing Planet -->
+              <div id="method-upload" class="bg-[#070b12] border-2 border-gray-800 hover:border-purple-500/50 rounded-2xl p-6 flex flex-col justify-between cursor-pointer transition-all duration-200 group">
+                <div>
+                  <div class="w-12 h-12 bg-purple-500/10 text-purple-400 rounded-xl flex items-center justify-center border border-purple-500/20 mb-4 group-hover:scale-105 transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" /></svg>
+                  </div>
+                  <h3 class="text-lg font-bold text-white group-hover:text-purple-400 transition-all duration-150">基于已有 Planet 二进制编辑</h3>
+                  <p class="text-xs text-gray-400 mt-2 leading-relaxed">上传您已有的 ZeroTier <code>planet</code> 二进制文件。WASM 引擎将深度反解析出完整的 JSON 树形配置，并一键载入配置编辑器供您直接编辑更新。</p>
+                </div>
+
+                <!-- Drag zone nested inside option B -->
+                <div id="planet-drop-zone" class="border border-dashed border-gray-850 bg-gray-950 hover:bg-[#0b0f19] rounded-xl p-4 mt-4 flex items-center justify-center gap-2 group/zone transition-all">
+                  <input type="file" id="planet-file-input" class="hidden" accept="*" />
+                  <svg class="h-5 w-5 text-purple-400 animate-bounce" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                  <span class="text-xs text-gray-500 group-hover/zone:text-purple-400 transition-all">拖入二进制文件提取</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel Actions -->
+            <div class="flex justify-between pt-4 border-t border-gray-850">
+              <button type="button" id="btn-back-2" class="btn bg-gray-900 hover:bg-gray-800 text-gray-400 border border-gray-800 py-2.5 px-6 rounded-lg text-sm transition-all flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                上一步
+              </button>
+              <button type="button" id="btn-next-2" disabled class="btn bg-blue-600 hover:bg-blue-500 disabled:bg-gray-800 disabled:text-gray-600 text-white font-medium py-2.5 px-6 rounded-lg text-sm transition-all flex items-center gap-1 cursor-not-allowed">
+                下一步：拓扑编辑
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== STEP 3: TOPO EDITOR ==================== -->
+        <section id="panel-step-3" class="panel-section hidden transition-all duration-300 animate-fadeIn">
+          <div class="bg-gray-900/60 border border-gray-800/80 backdrop-blur-md rounded-2xl p-6 md:p-8 shadow-xl">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-gray-850 pb-4">
+              <div>
+                <h2 class="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                  <span class="px-2 py-0.5 text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded">第 3 步</span>
+                  编辑网络 Planet 拓扑结构 (Topology Editor)
+                </h2>
+                <p class="text-sm text-gray-400 mt-1">您可以自由指定 World ID，并在这里添加节点描述（最多限制 4 个 Roots，每个 Root 最多配置 32 个 IP 端点）。</p>
+              </div>
+
+              <!-- Switch mode tab -->
+              <div class="bg-[#070b12] border border-gray-850 p-1 rounded-xl flex gap-1 self-start md:self-auto">
+                <button type="button" id="toggle-form-editor" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-blue-600 text-white shadow transition-all">可视化编辑器</button>
+                <button type="button" id="toggle-json-editor" class="text-xs font-semibold px-3 py-1.5 rounded-lg text-gray-400 hover:text-gray-200 transition-all">高级 JSON 明文</button>
+              </div>
+            </div>
+
+            <!-- Form Mode Editor -->
+            <div id="form-editor-container" class="space-y-6">
+              <!-- World ID input card -->
+              <div class="bg-[#070b12] border border-gray-800/80 rounded-xl p-5">
+                <div class="max-w-xs">
+                  <label for="editor-world-id" class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
+                    Planet 世界标示 ID (如果使用相同 World ID 和签名私钥,当服务器 planet 更新时，子节点会自动更新到新planet)
+                  </label>
+                  <input type="number" id="editor-world-id" value="88888888" placeholder="88888888" required
+                    class="w-full bg-[#0b0f19] border border-gray-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-4 py-2.5 text-sm font-mono text-white transition-all" />
+                </div>
+              </div>
+
+              <!-- Roots List (Form based) -->
+              <div>
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="text-sm font-bold text-gray-300 uppercase tracking-wider">根服务器节点路由表 (Roots Server Nodes)</h3>
+                  <button type="button" id="add-root-btn" class="text-xs font-semibold bg-blue-600 hover:bg-blue-500 disabled:bg-gray-800 disabled:text-gray-600 text-white px-3 py-2 rounded-lg flex items-center gap-1 transition-all disabled:cursor-not-allowed">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                    添加 Root 节点
+                  </button>
+                </div>
+
+                <!-- roots container -->
+                <div id="roots-form-list" class="space-y-6">
+                  <!-- Dynamically rendered root items will go here -->
+                </div>
+              </div>
+            </div>
+
+            <!-- JSON Mode Editor -->
+            <div id="json-editor-container" class="hidden space-y-4 animate-fadeIn">
+              <textarea id="json-raw-editor" rows="16"
+                class="w-full bg-[#030712] border border-gray-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-4 py-3 text-sm font-mono text-green-400 transition-all resize-y min-h-[300px]"></textarea>
+              <div class="flex items-center justify-between">
+                <p class="text-xs text-gray-500">建议在可视化编辑器和 JSON 格式间双向同步，请确保输入格式为合法的 JSON。</p>
+                <button type="button" id="format-json-btn" class="text-xs text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1">格式化 JSON</button>
+              </div>
+            </div>
+
+            <!-- Panel Actions -->
+            <div class="flex justify-between pt-6 border-t border-gray-850 mt-8">
+              <button type="button" id="btn-back-3" class="btn bg-gray-900 hover:bg-gray-800 text-gray-400 border border-gray-800 py-2.5 px-6 rounded-lg text-sm transition-all flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                上一步
+              </button>
+              <button type="button" id="btn-next-3" class="btn bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 px-6 rounded-lg text-sm transition-all flex items-center gap-1">
+                下一步：编译生成
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== STEP 4: GENERATION ==================== -->
+        <section id="panel-step-4" class="panel-section hidden transition-all duration-300 animate-fadeIn">
+          <div class="bg-gray-900/60 border border-gray-800/80 backdrop-blur-md rounded-2xl p-6 md:p-8 shadow-xl">
+            <div class="mb-6">
+              <h2 class="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                <span class="px-2 py-0.5 text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded">第 4 步</span>
+                编译签署并生成最终二进制
+              </h2>
+              <p class="text-sm text-gray-400 mt-1">万事俱备！WASM 引擎将读取您的私钥和配置，自动进行打包签名计算，并将生成的 Planet 文件编译下载到您的本地。</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <!-- World summary info -->
+              <div class="md:col-span-2 bg-[#070b12] border border-gray-800 rounded-xl p-5 flex flex-col justify-between">
+                <div>
+                  <h3 class="text-sm font-bold text-gray-300 uppercase tracking-wider mb-4">编译配置摘要 (Summary)</h3>
+                  <div class="grid grid-cols-2 gap-4">
+                    <div>
+                      <p class="text-xs text-gray-500">World ID (十六进制)</p>
+                      <p id="sum-world-id" class="text-lg font-bold font-mono text-white mt-1">0x88888888</p>
+                    </div>
+                    <div>
+                      <p class="text-xs text-gray-500">拓扑结构类型</p>
+                      <p class="text-lg font-bold text-purple-400 mt-1">PLANET</p>
+                    </div>
+                    <div>
+                      <p class="text-xs text-gray-500">Roots 节点数</p>
+                      <p id="sum-roots-count" class="text-lg font-bold text-blue-400 mt-1">0 / 4</p>
+                    </div>
+                    <div>
+                      <p class="text-xs text-gray-500">私钥状态 (Key Status)</p>
+                      <p id="sum-key-status" class="text-lg font-bold text-emerald-400 mt-1">已载入本地私钥</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-gray-850 flex gap-4 items-center">
+                  <div class="flex-1">
+                    <label for="output-planet-name" class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">
+                      输出 Planet 二进制文件名
+                    </label>
+                    <input type="text" id="output-planet-name" value="planet" required
+                      class="w-full bg-[#0b0f19] border border-gray-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-3 py-2 text-xs font-mono text-white transition-all" />
+                  </div>
+                  <div class="flex-1">
+                    <label for="secret-key-storage-name" class="block text-xs font-semibold uppercase tracking-wider text-gray-500 mb-1">
+                      LocalStorage 私钥键名
+                    </label>
+                    <input type="text" id="secret-key-storage-name" value="identity.secret" required
+                      class="w-full bg-[#0b0f19] border border-gray-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-3 py-2 text-xs font-mono text-blue-400 transition-all" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Compile button card -->
+              <div class="bg-gradient-to-br from-indigo-900/20 to-purple-900/20 border border-indigo-500/20 rounded-xl p-5 flex flex-col justify-between">
+                <div>
+                  <h3 class="text-sm font-bold text-indigo-300 uppercase tracking-wider mb-2">安全证书签署</h3>
+                  <p class="text-xs text-gray-400 leading-relaxed">如果本地未包含私钥，引擎将现场动态生成一份全新的私钥，并在下载 Planet 的同时让浏览器同步生成并下载对应的身份密钥文件，方便您以后反向迭代编辑。</p>
+                </div>
+
+                <button type="button" id="trigger-compile-btn"
+                  class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-3 px-4 rounded-xl border border-blue-400/20 shadow-lg hover:shadow-blue-500/20 hover:-translate-y-0.5 active:translate-y-0 transition-all cursor-pointer text-sm">
+                  ✨ 签署并下载二进制
+                </button>
+              </div>
+            </div>
+
+            <!-- Panel Actions -->
+            <div class="flex justify-between pt-6 border-t border-gray-850">
+              <button type="button" id="btn-back-4" class="btn bg-gray-900 hover:bg-gray-800 text-gray-400 border border-gray-800 py-2.5 px-6 rounded-lg text-sm transition-all flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                上一步
+              </button>
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+      <!-- Footer -->
+      <footer class="mt-auto text-center text-xs text-gray-500 border-t border-gray-850 pt-6">
+        <p>© 2026 planet.ignore.icu. WebAssembly engine running safely in browser sandbox.</p>
+        <p class="mt-1 text-gray-600 font-mono">Build with Vite v5 + Tailwind CSS v4 + Go WASM Compiler</p>
+      </footer>
+    </div>
+
+    <!-- Floating Support FAB -->
+    <button type="button" id="trigger-support-modal-fab" class="fixed bottom-6 right-6 z-40 flex items-center justify-center w-12 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-full shadow-2xl hover:shadow-blue-500/30 hover:scale-105 active:scale-95 transition-all cursor-pointer border border-blue-400/20 group">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5.5 w-5.5 transition-transform duration-300 group-hover:rotate-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+      </svg>
+      <!-- Tooltip -->
+      <span class="absolute right-14 scale-0 group-hover:scale-100 bg-[#0f1422] border border-gray-800 text-[11px] font-semibold text-gray-300 px-2.5 py-1.5 rounded-lg shadow-xl transition-all duration-200 whitespace-nowrap opacity-0 group-hover:opacity-100">
+        💬 交流群与赞赏
+      </span>
+    </button>
+
+    <!-- Support Modal Overlay -->
+    <div id="support-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-300">
+      <!-- Modal Box -->
+      <div class="relative w-full max-w-3xl bg-[#0b0f19] border border-gray-800 rounded-2xl overflow-hidden shadow-2xl scale-95 transition-all duration-300" id="support-modal-box">
+        <!-- Close Button -->
+        <button type="button" id="close-support-modal" class="absolute top-4 right-4 z-10 text-gray-400 hover:text-white transition-all cursor-pointer p-1.5 hover:bg-gray-800/50 rounded-lg">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+        
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-0">
+          <!-- Left Column: Branding & Info (md:col-span-2) -->
+          <div class="md:col-span-2 bg-gradient-to-b from-indigo-950/20 to-slate-900/40 p-6 md:p-8 flex flex-col justify-between border-b md:border-b-0 md:border-r border-gray-800/60 text-left">
+            <div>
+              <div class="flex items-center gap-2 mb-4">
+                <span class="px-2 py-0.5 text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded">v0.1.0</span>
+                <span class="text-xs font-semibold text-gray-500 font-mono">ztResolve</span>
+              </div>
+              <h3 class="text-lg font-bold text-white tracking-tight bg-gradient-to-r from-blue-400 to-indigo-300 bg-clip-text text-transparent mb-2">🪐 交流与支持</h3>
+              <p class="text-xs text-gray-400 leading-relaxed">基于 WebAssembly 安全沙箱构建的离线 ZeroTier Planet 拓扑签署、定制与逆向还原工具箱。</p>
+              
+              <div class="mt-6 space-y-3">
+                <div class="flex items-start gap-2.5 text-xs text-gray-500 leading-relaxed">
+                  <span class="text-blue-400">🛡️</span>
+                  <span><strong>100% 离线隐私</strong><br/>所有拓扑计算均在本地运行，绝对保护您的私钥。</span>
+                </div>
+                <div class="flex items-start gap-2.5 text-xs text-gray-500 leading-relaxed">
+                  <span class="text-indigo-400">⚡</span>
+                  <span><strong>双向极速编解码</strong><br/>一键解密还原二进制拓扑，免去环境搭建痛苦。</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mt-8 pt-4 border-t border-gray-800 flex items-center justify-between text-[11px] text-gray-500">
+              <span class="font-mono">planet.ignore.icu</span>
+              <a href="https://github.com/NONGFAH/ztt" target="_blank" class="hover:text-blue-400 flex items-center gap-1 transition-all">
+                GitHub ➔
+              </a>
+            </div>
+          </div>
+          
+          <!-- Right Column: Interactive QR Cards (md:col-span-3) -->
+          <div class="md:col-span-3 p-6 md:p-8 flex flex-col gap-5 text-left">
+            <!-- QQ Group Block -->
+            <div class="bg-gray-900/30 border border-gray-850 hover:border-gray-800 rounded-xl p-4 flex flex-col sm:flex-row items-center gap-5 transition-all duration-300">
+              <!-- QR Trigger Card -->
+              <div class="qr-trigger-card group relative w-36 h-36 bg-white p-1.5 rounded-xl shadow-lg cursor-zoom-in transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20 hover:z-30 flex items-center justify-center shrink-0" data-qr-src="/qq.jpeg" data-qr-title="QQ 交流群">
+                <img src="/qq.jpeg" alt="QQ Group" class="max-w-full max-h-full object-contain rounded-lg" />
+                <!-- Floating Zoom Hint Mask -->
+                <div class="absolute inset-0 bg-black/40 rounded-xl flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+                  </svg>
+                  <span class="text-[9px] text-gray-200 font-semibold tracking-wider">点击放大全屏</span>
+                </div>
+              </div>
+              <!-- Text & Copy -->
+              <div class="flex-1 text-center sm:text-left flex flex-col justify-between h-full py-1">
+                <div>
+                  <h4 class="text-xs font-bold text-gray-300 tracking-wide mb-1 flex items-center justify-center sm:justify-start gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                    QQ 交流群
+                  </h4>
+                  <p class="text-[11px] text-gray-500 mb-3">与各路 ZeroTier 拓扑专家交流，获取实时技术支持。</p>
+                </div>
+                <div>
+                  <div class="text-[11px] font-mono text-gray-400 mb-2 flex items-center justify-center sm:justify-start gap-1.5">
+                    群号: <span class="bg-[#0b0f19] border border-gray-800 px-2 py-0.5 rounded text-blue-400 font-semibold select-all font-mono">978051263</span>
+                  </div>
+                  <button type="button" id="copy-group-btn" class="w-full sm:w-auto bg-blue-600/10 hover:bg-blue-600/25 border border-blue-500/20 text-blue-400 hover:text-blue-300 font-medium py-1.5 px-3 rounded-lg text-xs cursor-pointer transition-all flex items-center justify-center gap-1 shadow-sm">
+                    📋 一键复制群号
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Alipay Donation Block -->
+            <div class="bg-gray-900/30 border border-gray-850 hover:border-gray-800 rounded-xl p-4 flex flex-col sm:flex-row items-center gap-5 transition-all duration-300">
+              <!-- QR Trigger Card -->
+              <div class="qr-trigger-card group relative w-36 h-36 bg-white p-1.5 rounded-xl shadow-lg cursor-zoom-in transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-amber-500/20 hover:z-30 flex items-center justify-center shrink-0" data-qr-src="/zfb.jpeg" data-qr-title="赞赏支持">
+                <img src="/zfb.jpeg" alt="Donate" class="max-w-full max-h-full object-contain rounded-lg" />
+                <!-- Floating Zoom Hint Mask -->
+                <div class="absolute inset-0 bg-black/40 rounded-xl flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
+                  </svg>
+                  <span class="text-[9px] text-gray-200 font-semibold tracking-wider">点击放大全屏</span>
+                </div>
+              </div>
+              <!-- Text -->
+              <div class="flex-1 text-center sm:text-left flex flex-col justify-center h-full py-2">
+                <h4 class="text-xs font-bold text-gray-300 tracking-wide mb-1 flex items-center justify-center sm:justify-start gap-1.5">
+                  <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                  赞赏支持作者
+                </h4>
+                <p class="text-[11px] text-gray-500 mb-3 leading-relaxed">觉得好用？扫描支持作者一杯咖啡，以激励作者保持对 WASM 签署内核的持续优化与迭代升级。</p>
+                <div class="text-[10px] text-amber-500/90 font-semibold tracking-wider flex items-center justify-center sm:justify-start gap-1">
+                  ☕ 您的赞赏是开源项目持续的动力！
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fullscreen Lightbox Overlay -->
+    <div id="qr-lightbox" class="fixed inset-0 z-55 flex flex-col items-center justify-center bg-black/90 backdrop-blur-xl opacity-0 pointer-events-none transition-all duration-300">
+      <!-- Close Button -->
+      <button type="button" id="close-qr-lightbox" class="absolute top-6 right-6 text-gray-400 hover:text-white transition-all cursor-pointer p-2 hover:bg-gray-800/40 rounded-full">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+      </button>
+      
+      <div class="text-center mb-6">
+        <h4 id="qr-lightbox-title" class="text-xl font-bold text-white tracking-wide"></h4>
+        <p class="text-xs text-gray-400 mt-1.5">请用手机扫描下方高清二维码进行操作</p>
+      </div>
+      
+      <div class="relative w-[85vw] h-[85vw] max-w-[550px] max-h-[550px] bg-white p-5 rounded-3xl shadow-2xl flex items-center justify-center scale-95 transition-all duration-300" id="qr-lightbox-box">
+        <img id="qr-lightbox-img" src="" alt="Fullscreen QR" class="max-w-full max-h-full object-contain rounded-2xl" />
+      </div>
+      
+      <p class="text-xs text-gray-500 mt-8 tracking-wider">点击任意空白处或按 ESC 键即可退出</p>
+    </div>
+
+    <!-- JS file entrypoint -->
+    <script src="/wasm_exec.js"></script>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
