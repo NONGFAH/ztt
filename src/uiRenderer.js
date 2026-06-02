@@ -174,7 +174,7 @@ export const uiRenderer = {
                     </label>
                     
                     <div class="flex gap-2">
-                        <input type="text" placeholder="示例: 127.0.0.1:9993"
+                        <input type="text" placeholder="示例: 127.0.0.1:9993 或 [::1]:9993"
                           class="endpoint-add-input flex-1 bg-[#0b0f19] border border-gray-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg px-3 py-2 text-xs font-mono text-white transition-all" />
                         <button type="button" class="add-endpoint-btn text-xs font-semibold bg-gray-900 border border-gray-800 text-gray-300 hover:text-white px-4 rounded-lg transition-all cursor-pointer">
                           + 添加
@@ -223,7 +223,7 @@ export const uiRenderer = {
                 if (!val) return;
 
                 if (!/^[0-9a-zA-Z\.:\[\]]+:\d+$/.test(val)) {
-                    alert("❌ 输入的 IP/端口 端点格式不正确！必须为 <IP地址/域名>:<端口号>，例如: 127.0.0.1:9993 或 [2402:4e00::1]:18524");
+                    alert("❌ 输入的 IP/端口 端点格式不正确！必须为 <IP地址/域名>:<端口号>，例如: 127.0.0.1:9993 或 [::1]:9993");
                     return;
                 }
 

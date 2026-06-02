@@ -328,7 +328,7 @@ btnNext3.addEventListener("click", () => {
             const ep = root.stableEndpoints[j].trim();
             const match = ep.match(/^([0-9a-zA-Z\.:\[\]]+):(\d+)$/);
             if (!match) {
-                toast.error(`根服务器 #${i + 1} 的第 ${j + 1} 个端点 "${ep}" 格式非法！\n必须为 <IP地址/域名>:<端口号>，例如: 127.0.0.1:9993 或 [2402:4e00::1]:18524`);
+                toast.error(`根服务器 #${i + 1} 的第 ${j + 1} 个端点 "${ep}" 格式非法！\n必须为 <IP地址/域名>:<端口号>，例如: 127.0.0.1:9993 或 [::1]:9993`);
                 return;
             }
             const port = parseInt(match[2], 10);
